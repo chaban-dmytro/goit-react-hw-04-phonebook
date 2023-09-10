@@ -1,30 +1,30 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import AddContact from './AddContact/AddContact';
 import ContactList from './ContactList/ContactList';
 import Filter from './Filter/Filter';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+const App = () => {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
+  useEffect(() => {
     const item = JSON.parse(localStorage.getItem('contacts'));
     if (item) {
-      this.setState({ contacts: item });
+      setContacts(item);
     }
-  }
+  }, []);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
+  useEffect(() => {
+    if (contacts.length > 0) {
+      localStorage.setItem('contacts', JSON.stringify(contacts));
+    } else {
+      localStorage.removeItem('contacts');
     }
-  }
+  }, [contacts]);
 
-  onAddNewContact = values => {
+  function onAddNewContact(values) {
     if (
-      this.state.contacts.some(
+      contacts.some(
         contact =>
           contact.name.toLowerCase().trim() === values.name.toLowerCase().trim()
       )
@@ -32,47 +32,40 @@ export class App extends Component {
       alert(`${values.name} is already in contacts!`);
       return;
     } else {
-      this.setState(({ contacts }) => ({
-        contacts: [...contacts, values],
-      }));
+      setContacts([...contacts, values]);
     }
-  };
+  }
 
-  onFilterInputChange = event => {
-    console.log(this.state.contacts);
-    this.setState({ filter: event.target.value });
-  };
-
-  getFilterContacts = () => {
-    const normalizedFilter = this.state.filter.toLowerCase();
-    return this.state.contacts.filter(contact => {
+  function getFilterContacts() {
+    const normalizedFilter = filter.toLowerCase();
+    return contacts.filter(contact => {
       return contact.name.toLowerCase().includes(normalizedFilter);
     });
-  };
-
-  onDeleteContact = id => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
-  };
-
-  render() {
-    return (
-      <>
-        <h1>Phonedook</h1>
-        <AddContact onAddNewContact={this.onAddNewContact}></AddContact>
-        <h2>Contacts</h2>
-        <Filter
-          onFilterInputChange={this.onFilterInputChange}
-          array={this.state.contacts}
-        ></Filter>
-        <ContactList
-          array={this.getFilterContacts()}
-          onDeleteContact={this.onDeleteContact}
-        ></ContactList>
-      </>
-    );
   }
-}
+
+  function onFilterInputChange(event) {
+    setFilter(event.target.value);
+  }
+
+  function onDeleteContact(id) {
+    setContacts(contacts.filter(contact => contact.id !== id));
+  }
+
+  return (
+    <>
+      <h1>Phonedook</h1>
+      <AddContact onAddNewContact={onAddNewContact}></AddContact>
+      <h2>Contacts</h2>
+      <Filter
+        onFilterInputChange={onFilterInputChange}
+        array={contacts}
+      ></Filter>
+      <ContactList
+        array={getFilterContacts()}
+        onDeleteContact={onDeleteContact}
+      ></ContactList>
+    </>
+  );
+};
 
 export default App;
